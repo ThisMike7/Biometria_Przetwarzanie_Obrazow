@@ -29,5 +29,5 @@ Do uruchomienia kodu źródłowego wymagany jest zainstalowany **Python w wersji
    python main.py
 ### 🍏 Opcja 2: Gotowa aplikacja dla macOS
 
-W repozytorium (lub w dołączonym archiwum) znajduje się gotowy, skompilowany plik aplikacji dla systemu macOS `main.app`). Nie wymaga on instalacji Pythona ani żadnych dodatkowych bibliotek.
+W archiwum main.zip znajduje się gotowy, skompilowany plik aplikacji dla systemu macOS `main.app`). Nie wymaga on instalacji Pythona ani żadnych dodatkowych bibliotek.
 
