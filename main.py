@@ -12,7 +12,7 @@ class ImageProcessingApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Projekt1 Biometria")
-        self.root.geometry("1400x700")
+        self.root.geometry("1500x800")
 
         self.original_image_pil = None
         self.processed_image_pil = None
@@ -37,7 +37,8 @@ class ImageProcessingApp:
             'gamma': tk.DoubleVar(value=1.0),
             'binarization': tk.DoubleVar(value=128.0),
             'gauss': tk.IntVar(value=2),
-            'laplace': tk.DoubleVar(value=1.0)
+            'laplace': tk.DoubleVar(value=1.0),
+            'blur': tk.IntVar(value=1)
         }
 
         self.setup_menu()
@@ -90,11 +91,12 @@ class ImageProcessingApp:
         self.create_tool_option_with_slider("Korekta Kontrastu", 'contrast', 0.0, 3.0, 1.0, 0.1)
         self.create_tool_option_with_slider("Korekta Gamma", 'gamma', 0.1, 4.0, 1.0, 0.1)
         self.create_tool_option_with_slider("Binaryzacja", 'binarization', 0, 255, 128)
+        self
 
         ttk.Separator(self.tools_frame, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10)
         
         ttk.Label(self.tools_frame, text="Filtry Graficzne:", font=("Arial", 10, "bold")).pack(anchor=tk.W, pady=5)
-        self.create_tool_option("Filtr Uśredniający (10 krotny blur)", 'blur')
+        self.create_tool_option_with_slider("Filtr Uśredniający (n-krotny blur)", 'blur', 1, 100, 1)
         self.create_tool_option_with_slider("Filtr Gaussa (b)", 'gauss', 1, 4, 2, 1)
         self.create_tool_option_with_slider("Filtr Laplace'a (c)", 'laplace', 0.1, 1.0, 1.0, 0.1)
         self.create_tool_option("Krzyż Robertsa", 'roberts')
@@ -185,6 +187,7 @@ class ImageProcessingApp:
         self.filter_params['binarization'].set(128.0)
         self.filter_params['gauss'].set(2)
         self.filter_params['laplace'].set(1.0)
+        self.filter_params['blur'].set(1)
         self.trigger_update()
 
     def get_image_array(self):
@@ -195,15 +198,18 @@ class ImageProcessingApp:
 
     
     
-    def manual_3x3_blur(self, image_array):
-        result = np.zeros_like(image_array, dtype=np.float32)
-        padded = np.pad(image_array, pad_width=((1, 1), (1, 1), (0, 0)), mode='edge')
-        sum_array = (
-            padded[0:-2, 0:-2] + padded[0:-2, 1:-1] + padded[0:-2, 2:] +
-            padded[1:-1, 0:-2] + padded[1:-1, 1:-1] + padded[1:-1, 2:] +
-            padded[2:,   0:-2] + padded[2:,   1:-1] + padded[2:,   2:]
-        )
-        result = sum_array / 9
+    def manual_3x3_blur(self, image_array,level):
+        image=image_array.copy()
+        for _ in range(level):
+            result = np.zeros_like(image, dtype=np.float32)
+            padded = np.pad(image, pad_width=((1, 1), (1, 1), (0, 0)), mode='edge')
+            sum_array = (
+                padded[0:-2, 0:-2] + padded[0:-2, 1:-1] + padded[0:-2, 2:] +
+                padded[1:-1, 0:-2] + padded[1:-1, 1:-1] + padded[1:-1, 2:] +
+                padded[2:,   0:-2] + padded[2:,   1:-1] + padded[2:,   2:]
+            )
+            result = sum_array / 9.0
+            image= result
         return result
     
     def gaussian(self, image_array,b=2):
@@ -323,8 +329,8 @@ class ImageProcessingApp:
             work_array = np.stack([gray, gray, gray], axis=-1)
 
         if self.active_filters['blur'].get():
-            for _ in range(10):
-                work_array = self.manual_3x3_blur(work_array)
+            level=self.filter_params['blur'].get()
+            work_array = self.manual_3x3_blur(work_array, level)
             
         if self.active_filters['gauss'].get():
             b = self.filter_params['gauss'].get()
